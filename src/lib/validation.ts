@@ -4,6 +4,8 @@ export const LIMITS = {
   password: { min: 4, max: 64 },
 } as const;
 
+const BCRYPT_MAX_BYTES = 72;
+
 type Field = keyof typeof LIMITS;
 
 const LABELS: Record<Field, string> = {
@@ -23,5 +25,9 @@ export function validate(field: Field, value: string): string | null {
   const length = [...value].length;
   if (length < min) return min === 1 ? `${LABELS[field]}을(를) 입력해 주세요.` : `${LABELS[field]}은(는) ${min}자 이상이어야 합니다.`;
   if (length > max) return `${LABELS[field]}은(는) ${max}자 이하여야 합니다.`;
+  // bcrypt ignores everything past 72 bytes, so longer passwords would match on a prefix.
+  if (field === "password" && new TextEncoder().encode(value).length > BCRYPT_MAX_BYTES) {
+    return "비밀번호가 너무 깁니다. (한글 기준 약 24자 이하)";
+  }
   return null;
 }
