@@ -28,14 +28,21 @@ function toEntry(row: EntryRow): Entry {
   };
 }
 
-export async function listEntries(): Promise<Entry[]> {
+export async function listEntries(limit: number): Promise<{ entries: Entry[]; total: number }> {
   const sql = getSql();
-  const rows = (await sql`
-    SELECT id, name, message, created_at, updated_at
-    FROM entries
-    ORDER BY created_at DESC, id DESC
-  `) as EntryRow[];
-  return rows.map(toEntry);
+  const [rows, countRows] = await Promise.all([
+    sql`
+      SELECT id, name, message, created_at, updated_at
+      FROM entries
+      ORDER BY created_at DESC, id DESC
+      LIMIT ${limit}
+    `,
+    sql`SELECT count(*)::int AS total FROM entries`,
+  ]);
+  return {
+    entries: (rows as EntryRow[]).map(toEntry),
+    total: (countRows as { total: number }[])[0].total,
+  };
 }
 
 export async function insertEntry(input: { name: string; message: string; password: string }) {

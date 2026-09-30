@@ -3,6 +3,7 @@
 import { useActionState, useState, startTransition, type FormEvent } from "react";
 import { removeEntry, updateEntry, type ActionState } from "@/app/actions";
 import { LIMITS } from "@/lib/validation";
+import { CharCount, countChars } from "./CharCount";
 import { FieldError } from "./FieldError";
 
 type Props = {
@@ -55,6 +56,7 @@ function PasswordInput({ placeholder }: { placeholder: string }) {
 }
 
 function EditForm({ id, message, onDone }: { id: number; message: string; onDone: () => void }) {
+  const [messageLength, setMessageLength] = useState(() => countChars(message));
   const [state, formAction, pending] = useActionState(async (prev: ActionState, formData: FormData) => {
     const result = await updateEntry(prev, formData);
     if (result.ok) onDone();
@@ -71,8 +73,10 @@ function EditForm({ id, message, onDone }: { id: number; message: string; onDone
         maxLength={LIMITS.message.max}
         required
         aria-label="수정할 메시지"
+        onChange={(e) => setMessageLength(countChars(e.target.value))}
         className={inputClass}
       />
+      <CharCount count={messageLength} />
       <FieldError error={state.fieldErrors?.message} />
       <PasswordInput placeholder="작성 시 입력한 비밀번호" />
       <FieldError error={state.fieldErrors?.password} />

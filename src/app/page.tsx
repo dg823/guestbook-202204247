@@ -1,9 +1,19 @@
-import { connection } from "next/server";
+import Link from "next/link";
 import { listEntries } from "@/lib/entries";
 import { EntryForm } from "./_components/EntryForm";
 import { EntryItem } from "./_components/EntryItem";
 
 const DEVELOPER = { name: "이동건", studentId: "202204247" };
+
+const PAGE_SIZE = 20;
+const MAX_COUNT = 1000;
+
+// `?count=N` controls how many of the newest entries are shown; "더 보기" bumps it by a page.
+function parseCount(raw: string | string[] | undefined) {
+  const n = Number(Array.isArray(raw) ? raw[0] : raw);
+  if (!Number.isFinite(n) || n < PAGE_SIZE) return PAGE_SIZE;
+  return Math.min(Math.ceil(n / PAGE_SIZE) * PAGE_SIZE, MAX_COUNT);
+}
 
 const dateFormat = new Intl.DateTimeFormat("ko-KR", {
   timeZone: "Asia/Seoul",
@@ -15,9 +25,10 @@ const dateFormat = new Intl.DateTimeFormat("ko-KR", {
   hour12: false,
 });
 
-export default async function Home() {
-  await connection();
-  const entries = await listEntries();
+export default async function Home({ searchParams }: PageProps<"/">) {
+  const count = parseCount((await searchParams).count);
+  const { entries, total } = await listEntries(count);
+  const hasMore = entries.length < total && count < MAX_COUNT;
 
   return (
     <div className="flex-1 bg-zinc-50">
@@ -35,7 +46,10 @@ export default async function Home() {
         <EntryForm />
 
         <section>
-          <h2 className="mb-3 text-sm font-medium text-zinc-500">전체 글 {entries.length}개 · 최신순</h2>
+          <h2 className="mb-3 text-sm font-medium text-zinc-500">
+            전체 글 {total}개 · 최신순
+            {total > entries.length && ` · ${entries.length}개 표시 중`}
+          </h2>
           {entries.length === 0 ? (
             <p className="rounded-xl border border-dashed border-zinc-300 p-8 text-center text-zinc-500">
               아직 작성된 글이 없습니다. 첫 번째 글을 남겨 보세요!
@@ -54,6 +68,15 @@ export default async function Home() {
                 />
               ))}
             </ul>
+          )}
+          {hasMore && (
+            <Link
+              href={`/?count=${count + PAGE_SIZE}`}
+              scroll={false}
+              className="mt-4 block rounded-xl border border-zinc-200 bg-white py-3 text-center text-sm font-medium text-zinc-700 shadow-sm hover:bg-zinc-100"
+            >
+              더 보기 ({total - entries.length}개 남음)
+            </Link>
           )}
         </section>
       </main>

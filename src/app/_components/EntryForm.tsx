@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useRef, startTransition, type FormEvent } from "react";
+import { useActionState, useRef, useState, startTransition, type FormEvent } from "react";
 import { createEntry, type ActionState } from "@/app/actions";
 import { LIMITS } from "@/lib/validation";
+import { CharCount, countChars } from "./CharCount";
 import { FieldError } from "./FieldError";
 
 const initialState: ActionState = { ok: false };
@@ -12,9 +13,13 @@ const inputClass =
 
 export function EntryForm() {
   const formRef = useRef<HTMLFormElement>(null);
+  const [messageLength, setMessageLength] = useState(0);
   const [state, formAction, pending] = useActionState(async (prev: ActionState, formData: FormData) => {
     const result = await createEntry(prev, formData);
-    if (result.ok) formRef.current?.reset();
+    if (result.ok) {
+      formRef.current?.reset();
+      setMessageLength(0);
+    }
     return result;
   }, initialState);
 
@@ -67,8 +72,10 @@ export function EntryForm() {
           rows={3}
           maxLength={LIMITS.message.max}
           required
+          onChange={(e) => setMessageLength(countChars(e.target.value))}
           className={inputClass}
         />
+        <CharCount count={messageLength} />
         <FieldError error={state.fieldErrors?.message} />
       </div>
       <div className="flex items-center justify-between gap-3">
