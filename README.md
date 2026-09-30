@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# guestbook-202204247 — 미니 방명록
 
-## Getting Started
+개발자: **이동건 (202204247)**
 
-First, run the development server:
+이름, 메시지, 작성 시각이 쌓이는 방명록입니다. 회원가입 없이, 글 작성 시 입력한 비밀번호로 본인 글만 수정·삭제할 수 있습니다.
+
+- Next.js (App Router) + TypeScript + Tailwind CSS
+- Neon Postgres (`@neondatabase/serverless`), 비밀번호는 bcrypt 해시로 저장
+- Vercel 배포
+
+명세: [docs/SPEC.md](docs/SPEC.md) · 티켓: [docs/TICKETS.md](docs/TICKETS.md)
+
+## 로컬 실행
 
 ```bash
+npm install
+cp .env.example .env.local   # DATABASE_URL 에 Neon 연결 문자열 입력
+npm run db:migrate           # entries 테이블 생성
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 구조
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| 경로 | 역할 |
+|---|---|
+| `db/schema.sql` | 테이블 스키마 |
+| `src/lib/entries.ts` | DB 쿼리 · 비밀번호 검증 (서버 전용) |
+| `src/app/actions.ts` | 작성/수정/삭제 Server Actions |
+| `src/app/page.tsx` | 최신순 목록 + 개발자 정보 |
+| `src/app/_components/` | 작성 폼, 글 항목(수정·삭제 폼) |
